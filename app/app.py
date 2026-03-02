@@ -475,6 +475,98 @@ async def streaming_metrics(request: Request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
+@app.get("/api/metrics/competitive")
+async def competitive_metrics(request: Request):
+    host, auth = _get_host(), _get_auth_header(request)
+    if not auth:
+        return JSONResponse({"error": "No authentication"}, status_code=401)
+    S = f"{CATALOG}.{SCHEMA}"
+    queries = {
+        "platform_growth": f"""
+            SELECT service_name,
+              SUM(CASE WHEN current_month_changes='Added' THEN 1 ELSE 0 END) AS added,
+              SUM(CASE WHEN current_month_changes='Dropped' THEN 1 ELSE 0 END) AS dropped,
+              SUM(CASE WHEN current_month_changes='Added' THEN 1 ELSE 0 END) - SUM(CASE WHEN current_month_changes='Dropped' THEN 1 ELSE 0 END) AS net,
+              ROUND(SUM(CASE WHEN current_month_changes='Dropped' THEN 1 ELSE 0 END)*100.0/COUNT(*),1) AS churn_pct,
+              COUNT(DISTINCT title) AS unique_titles,
+              ROUND(AVG(pageviews_views),0) AS avg_pageviews,
+              SUM(CASE WHEN is_country_exclusive=1 THEN 1 ELSE 0 END) AS exclusive_titles,
+              ROUND(SUM(CASE WHEN is_country_exclusive=1 THEN 1 ELSE 0 END)*100.0/COUNT(*),1) AS exclusivity_pct
+            FROM {S}.vod_title_changes_us_ca WHERE current_month_changes IS NOT NULL
+            GROUP BY service_name ORDER BY net DESC
+        """,
+        "nbcu_content": f"""
+            SELECT original_network, COUNT(DISTINCT title) AS titles,
+              ROUND(AVG(pageviews_views),0) AS avg_views,
+              SUM(CASE WHEN current_month_changes='Added' THEN 1 ELSE 0 END) AS added,
+              SUM(CASE WHEN current_month_changes='Dropped' THEN 1 ELSE 0 END) AS dropped
+            FROM {S}.vod_title_changes_us_ca
+            WHERE current_month_changes IS NOT NULL
+              AND original_network IN ('USA Network','Syfy','E!','Bravo','CNBC','Golf Channel','Oxygen','MSNBC','NBC')
+            GROUP BY original_network ORDER BY titles DESC
+        """,
+        "window_comparison": f"""
+            SELECT service_name, ROUND(AVG(avg_days),0) AS series_window
+            FROM {S}.window_series_trends
+            WHERE avg_days IS NOT NULL AND service_name != 'Estimated LINEAR'
+            GROUP BY service_name ORDER BY series_window DESC
+        """,
+        "window_nonseries": f"""
+            SELECT service_name, ROUND(AVG(avg_days),0) AS nonseries_window
+            FROM {S}.window_non_series_trends
+            WHERE avg_days IS NOT NULL AND service_name != 'Estimated LINEAR'
+            GROUP BY service_name ORDER BY nonseries_window DESC
+        """,
+        "high_value_drops": f"""
+            SELECT title, service_name, pageviews_views, imdb_rating, category, is_country_exclusive
+            FROM {S}.vod_title_changes_us_ca
+            WHERE current_month_changes='Dropped' AND pageviews_views > 50000
+            ORDER BY pageviews_views DESC LIMIT 15
+        """,
+        "high_value_adds": f"""
+            SELECT title, service_name, pageviews_views, imdb_rating, category, is_country_exclusive
+            FROM {S}.vod_title_changes_us_ca
+            WHERE current_month_changes='Added' AND pageviews_views > 30000 AND is_country_exclusive=1
+            ORDER BY pageviews_views DESC LIMIT 15
+        """,
+        "category_engagement": f"""
+            SELECT category, COUNT(*) AS titles,
+              ROUND(AVG(pageviews_views),0) AS avg_pageviews,
+              ROUND(AVG(imdb_rating),2) AS avg_rating,
+              SUM(CASE WHEN current_month_changes='Added' THEN 1 ELSE 0 END) AS added,
+              SUM(CASE WHEN current_month_changes='Dropped' THEN 1 ELSE 0 END) AS dropped
+            FROM {S}.vod_title_changes_us_ca
+            WHERE current_month_changes IS NOT NULL AND category IS NOT NULL
+            GROUP BY category ORDER BY avg_pageviews DESC
+        """,
+        "multi_platform_titles": f"""
+            SELECT title, COUNT(DISTINCT service_name) AS platforms,
+              CONCAT_WS(', ', COLLECT_SET(service_name)) AS services,
+              MAX(pageviews_views) AS peak_views, MAX(imdb_rating) AS rating
+            FROM {S}.vod_title_changes_us_ca
+            WHERE current_month_changes IS NOT NULL
+            GROUP BY title HAVING COUNT(DISTINCT service_name) >= 4
+            ORDER BY peak_views DESC LIMIT 12
+        """,
+        "network_groups": f"""
+            SELECT network_group, COUNT(DISTINCT title) AS titles,
+              ROUND(AVG(pageviews_views),0) AS avg_views,
+              SUM(CASE WHEN current_month_changes='Added' THEN 1 ELSE 0 END) AS added,
+              SUM(CASE WHEN current_month_changes='Dropped' THEN 1 ELSE 0 END) AS dropped
+            FROM {S}.vod_title_changes_us_ca
+            WHERE current_month_changes IS NOT NULL AND network_group IS NOT NULL
+            GROUP BY network_group ORDER BY titles DESC LIMIT 15
+        """,
+    }
+    try:
+        async with aiohttp.ClientSession() as session:
+            keys = list(queries.keys())
+            raw = await asyncio.gather(*[_execute_sql(session, host, auth, queries[k]) for k in keys], return_exceptions=True)
+            return {k: (r if not isinstance(r, Exception) else {"columns": [], "rows": [], "error": str(r)}) for k, r in zip(keys, raw)}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 @app.get("/api/debug")
 async def debug_info(request: Request):
     host = _get_host()
@@ -649,6 +741,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
       <button class="nav-item" onclick="showPage('explorer')" data-page="explorer">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Content Explorer
+      </button>
+      <button class="nav-item" onclick="showPage('competitive')" data-page="competitive">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        Competitive Analysis
       </button>
       <button class="nav-item" onclick="showPage('dashboard')" data-page="dashboard">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -864,6 +960,116 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         <div class="pagination"><span id="pageInfo"></span><div><button id="prevBtn" onclick="changePage(-1)" disabled>Previous</button> <button id="nextBtn" onclick="changePage(1)">Next</button></div></div>
       </div>
     </div>
+
+    <!-- Competitive Analysis -->
+    <div id="page-competitive" class="page">
+      <div class="page-header">
+        <h1>Competitive Analysis</h1>
+        <p>AVOD/FAST landscape intelligence &mdash; platform growth, content economics, and strategic opportunities for Versant</p>
+      </div>
+      <div id="compError"></div>
+
+      <!-- 1. FAST Land Grab -->
+      <div class="section">
+        <div class="section-head">
+          <h2>1. The FAST Land Grab &mdash; Platform Growth Scorecard</h2>
+          <p>Net title adds/drops this month. Positive net = growing catalog, negative = shrinking. Tubi is the only major platform with strong growth.</p>
+        </div>
+        <div class="section-body" style="overflow-x:auto">
+          <table class="data-table" id="compGrowthTable" style="min-width:1000px"><thead><tr><th>Platform</th><th class="num">Added</th><th class="num">Dropped</th><th class="num">Net Change</th><th class="num">Churn %</th><th class="num">Unique Titles</th><th class="num">Avg Views</th><th class="num">Exclusive</th><th class="num">Excl %</th></tr></thead>
+          <tbody id="compGrowthBody"><tr><td colspan="9" class="loading-msg">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <div class="row-2" style="margin-top:18px">
+        <div class="chart-wrap"><h3>Net Title Growth by Platform</h3><p class="chart-sub">Positive = growing, negative = shrinking catalog</p><div class="chart-box"><canvas id="chartCompNet"></canvas></div></div>
+        <div class="chart-wrap"><h3>Exclusivity vs Engagement</h3><p class="chart-sub">Exclusivity % vs avg page views per platform</p><div class="chart-box"><canvas id="chartCompExcl"></canvas></div></div>
+      </div>
+
+      <!-- 2. Versant Content on Competitors -->
+      <div class="section" style="margin-top:28px">
+        <div class="section-head">
+          <h2>2. Versant Content on Competitor Platforms</h2>
+          <p>NBCU network content (NBC, Syfy, USA Network, E!, Oxygen) currently distributed across AVOD services. Every title here is one that doesn&rsquo;t differentiate your own FAST channels.</p>
+        </div>
+        <div class="section-body">
+          <table class="data-table"><thead><tr><th>Network</th><th class="num">Titles on AVOD</th><th class="num">Avg Page Views</th><th class="num">Added</th><th class="num">Dropped</th><th class="num">Net</th></tr></thead>
+          <tbody id="compNbcuBody"><tr><td colspan="6" class="loading-msg">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <!-- 3. Window Strategy -->
+      <div class="section" style="margin-top:28px">
+        <div class="section-head">
+          <h2>3. Fandango at Home Window Strategy vs Competitors</h2>
+          <p>Average days content stays on each platform. Longer windows = lower re-licensing cost, better user experience. Fandango at Home is mid-pack.</p>
+        </div>
+        <div class="row-2">
+          <div class="chart-wrap"><h3>Series Window Duration</h3><p class="chart-sub">Avg days series content stays on platform</p><div class="chart-box"><canvas id="chartCompWindowS"></canvas></div></div>
+          <div class="chart-wrap"><h3>Non-Series Window Duration</h3><p class="chart-sub">Avg days film/non-series content stays on platform</p><div class="chart-box"><canvas id="chartCompWindowNS"></canvas></div></div>
+        </div>
+      </div>
+
+      <!-- 4. High-Value Drops -->
+      <div class="section" style="margin-top:28px">
+        <div class="section-head">
+          <h2>4. High-Value Content Being Dropped by Competitors</h2>
+          <p>Titles with &gt;50K page views being shed this month. These are proven audience draws &mdash; potential acquisition targets at lower licensing costs.</p>
+        </div>
+        <div class="section-body" style="overflow-x:auto">
+          <table class="data-table"><thead><tr><th>Title</th><th>Dropped From</th><th class="num">Page Views</th><th class="num">IMDb</th><th>Category</th><th>Exclusive?</th></tr></thead>
+          <tbody id="compDropsBody"><tr><td colspan="6" class="loading-msg">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <!-- 5. Exclusive Acquisitions -->
+      <div class="section" style="margin-top:28px">
+        <div class="section-head">
+          <h2>5. High-Value Exclusive Adds This Month</h2>
+          <p>Titles added as exclusives with &gt;30K page views. These are the competitive moves happening right now &mdash; content being locked up by rivals.</p>
+        </div>
+        <div class="section-body" style="overflow-x:auto">
+          <table class="data-table"><thead><tr><th>Title</th><th>Added To</th><th class="num">Page Views</th><th class="num">IMDb</th><th>Category</th></tr></thead>
+          <tbody id="compAddsBody"><tr><td colspan="5" class="loading-msg">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <!-- 6. Category Engagement -->
+      <div class="section" style="margin-top:28px">
+        <div class="section-head">
+          <h2>6. Scripted Content Drives Disproportionate Engagement</h2>
+          <p>Avg page views by content category. Scripted series generate 2&ndash;6x the engagement of any other category &mdash; Versant&rsquo;s Syfy &amp; USA Network libraries are scripted-heavy.</p>
+        </div>
+        <div class="row-2">
+          <div class="chart-wrap"><h3>Engagement by Category</h3><p class="chart-sub">Avg page views per title by content category</p><div class="chart-box"><canvas id="chartCompCatEng"></canvas></div></div>
+          <div class="chart-wrap"><h3>Category Add/Drop Balance</h3><p class="chart-sub">Net title movement by category</p><div class="chart-box"><canvas id="chartCompCatFlow"></canvas></div></div>
+        </div>
+      </div>
+
+      <!-- 7. Multi-Platform Overlap -->
+      <div class="section" style="margin-top:28px">
+        <div class="section-head">
+          <h2>7. Multi-Platform Content Overlap</h2>
+          <p>Titles available on 4+ platforms simultaneously. This content has zero differentiation value &mdash; everyone carries it.</p>
+        </div>
+        <div class="section-body" style="overflow-x:auto">
+          <table class="data-table"><thead><tr><th>Title</th><th class="num">Platforms</th><th>Available On</th><th class="num">Peak Views</th><th class="num">IMDb</th></tr></thead>
+          <tbody id="compOverlapBody"><tr><td colspan="5" class="loading-msg">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <!-- 8. Network Groups -->
+      <div class="section" style="margin-top:28px">
+        <div class="section-head">
+          <h2>8. Content by Network Group</h2>
+          <p>Which media conglomerates have the most content flowing through AVOD platforms. Identifies whose content is powering which platforms.</p>
+        </div>
+        <div class="section-body">
+          <table class="data-table"><thead><tr><th>Network Group</th><th class="num">Titles</th><th class="num">Avg Views</th><th class="num">Added</th><th class="num">Dropped</th><th class="num">Net</th></tr></thead>
+          <tbody id="compNetworkBody"><tr><td colspan="6" class="loading-msg">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -920,6 +1126,7 @@ function showPage(page){
   if(page==='dashboard') loadDashboard();
   if(page==='metrics') loadMetrics();
   if(page==='explorer') loadExplorer();
+  if(page==='competitive') loadCompetitive();
 }
 
 /* ── Dashboard ── */
@@ -1276,6 +1483,106 @@ function renderMetrics(d){
     if(d.origin_country&&d.origin_country.rows&&d.origin_country.rows.length)
       makeHBar('chartOrigin',d.origin_country.rows.map(function(r){return r[0]}),d.origin_country.rows.map(function(r){return parseInt(r[1])||0}),'Titles',5);
   }catch(e){console.error('Metrics chart error:',e)}
+}
+
+/* ── Competitive Analysis ── */
+var compLoaded = false;
+function loadCompetitive(){
+  if(compLoaded) return;
+  fetch('/api/metrics/competitive').then(function(r){return r.json()}).then(function(data){
+    if(data.error){document.getElementById('compError').innerHTML='<div class="error-box">'+esc(data.error)+'</div>';return}
+    renderCompetitive(data);
+    compLoaded=true;
+  }).catch(function(e){document.getElementById('compError').innerHTML='<div class="error-box">'+esc(e.message)+'</div>'});
+}
+function renderCompetitive(d){
+  /* 1. Platform Growth table */
+  if(d.platform_growth&&d.platform_growth.rows&&d.platform_growth.rows.length){
+    var rows=d.platform_growth.rows;
+    document.getElementById('compGrowthBody').innerHTML=rows.map(function(r){
+      var net=parseInt(r[3])||0,cls=net>0?'badge-green':net<0?'badge-red':'badge-blue',sign=net>0?'+':'';
+      var churnCls=parseFloat(r[4])>50?'style="color:#f87171"':parseFloat(r[4])<35?'style="color:#4ade80"':'';
+      return '<tr><td style="font-weight:600">'+esc(r[0])+'</td><td class="num" style="color:#4ade80">'+fmt(r[1])+'</td><td class="num" style="color:#f87171">'+fmt(r[2])+'</td><td class="num"><span class="badge '+cls+'">'+sign+fmt(net)+'</span></td><td class="num" '+churnCls+'>'+r[4]+'%</td><td class="num">'+fmt(r[5])+'</td><td class="num">'+fmt(r[6])+'</td><td class="num">'+fmt(r[7])+'</td><td class="num">'+r[8]+'%</td></tr>';
+    }).join('');
+    if(typeof Chart!=='undefined'){
+      var labels=rows.map(function(r){return r[0]});
+      var nets=rows.map(function(r){return parseInt(r[3])||0});
+      var barColors=nets.map(function(v){return v>0?'rgba(34,197,94,.7)':'rgba(239,68,68,.7)'});
+      var cv1=document.getElementById('chartCompNet');
+      if(cv1) new Chart(cv1.getContext('2d'),{type:'bar',data:{labels:labels,datasets:[{label:'Net Change',data:nets,backgroundColor:barColors,borderColor:barColors.map(function(c){return c.replace('.7)','1)')}),borderWidth:1,borderRadius:4}]},
+        options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:Object.assign({},TT,{callbacks:{label:function(ctx){return (ctx.raw>0?'+':'')+fmt(ctx.raw)+' titles'}}})},
+          scales:{x:{ticks:{color:TICK,font:{size:10}},grid:{color:GRID}},y:{ticks:{color:LABEL,font:{size:11}},grid:{color:GRID}}}}});
+      var exclPct=rows.map(function(r){return parseFloat(r[8])||0});
+      var avgViews=rows.map(function(r){return parseInt(r[6])||0});
+      var cv2=document.getElementById('chartCompExcl');
+      if(cv2) new Chart(cv2.getContext('2d'),{type:'scatter',data:{datasets:[{label:'Platforms',data:labels.map(function(_,i){return{x:exclPct[i],y:avgViews[i]}}),backgroundColor:COLORS.slice(0,labels.length),pointRadius:8,pointHoverRadius:10}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:Object.assign({},TT,{callbacks:{label:function(ctx){return labels[ctx.dataIndex]+': '+ctx.raw.x+'% excl, '+fmt(ctx.raw.y)+' avg views'}}})},
+          scales:{x:{title:{display:true,text:'Exclusivity %',color:LABEL,font:{size:11}},ticks:{color:TICK,font:{size:10},callback:function(v){return v+'%'}},grid:{color:GRID}},y:{title:{display:true,text:'Avg Page Views',color:LABEL,font:{size:11}},ticks:{color:TICK,font:{size:10},callback:function(v){return fmt(v)}},grid:{color:GRID}}}}});
+    }
+  }
+  /* 2. NBCU Content */
+  if(d.nbcu_content&&d.nbcu_content.rows&&d.nbcu_content.rows.length){
+    document.getElementById('compNbcuBody').innerHTML=d.nbcu_content.rows.map(function(r){
+      var net=(parseInt(r[3])||0)-(parseInt(r[4])||0),cls=net>=0?'badge-green':'badge-red',sign=net>0?'+':'';
+      return '<tr><td style="font-weight:600">'+esc(r[0])+'</td><td class="num">'+fmt(r[1])+'</td><td class="num">'+fmt(r[2])+'</td><td class="num" style="color:#4ade80">'+fmt(r[3])+'</td><td class="num" style="color:#f87171">'+fmt(r[4])+'</td><td class="num"><span class="badge '+cls+'">'+sign+fmt(net)+'</span></td></tr>';
+    }).join('');
+  } else {document.getElementById('compNbcuBody').innerHTML='<tr><td colspan="6" class="loading-msg">No data</td></tr>'}
+  /* 3. Window comparison charts */
+  if(typeof Chart!=='undefined'){
+    if(d.window_comparison&&d.window_comparison.rows&&d.window_comparison.rows.length){
+      var wr=d.window_comparison.rows;
+      var wLabels=wr.map(function(r){return r[0]}),wVals=wr.map(function(r){return parseFloat(r[1])||0});
+      var wColors=wLabels.map(function(l){return l.indexOf('Fandango')>=0?'rgba(245,158,11,.8)':'rgba(59,130,246,.6)'});
+      var cv3=document.getElementById('chartCompWindowS');
+      if(cv3) new Chart(cv3.getContext('2d'),{type:'bar',data:{labels:wLabels,datasets:[{label:'Avg Days',data:wVals,backgroundColor:wColors,borderColor:wColors.map(function(c){return c.replace(/\\.\\d\\)/,'1)')}),borderWidth:1,borderRadius:4,maxBarThickness:24}]},
+        options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:Object.assign({},TT,{callbacks:{label:function(ctx){return fmt(ctx.raw)+' days'}}})},
+          scales:{x:{ticks:{color:TICK,font:{size:10}},grid:{color:GRID}},y:{ticks:{color:LABEL,font:{size:11}},grid:{color:GRID}}}}});
+    }
+    if(d.window_nonseries&&d.window_nonseries.rows&&d.window_nonseries.rows.length){
+      var nr=d.window_nonseries.rows;
+      var nLabels=nr.map(function(r){return r[0]}),nVals=nr.map(function(r){return parseFloat(r[1])||0});
+      var nColors=nLabels.map(function(l){return l.indexOf('Fandango')>=0?'rgba(245,158,11,.8)':'rgba(16,185,129,.6)'});
+      var cv4=document.getElementById('chartCompWindowNS');
+      if(cv4) new Chart(cv4.getContext('2d'),{type:'bar',data:{labels:nLabels,datasets:[{label:'Avg Days',data:nVals,backgroundColor:nColors,borderColor:nColors.map(function(c){return c.replace(/\\.\\d\\)/,'1)')}),borderWidth:1,borderRadius:4,maxBarThickness:24}]},
+        options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:Object.assign({},TT,{callbacks:{label:function(ctx){return fmt(ctx.raw)+' days'}}})},
+          scales:{x:{ticks:{color:TICK,font:{size:10}},grid:{color:GRID}},y:{ticks:{color:LABEL,font:{size:11}},grid:{color:GRID}}}}});
+    }
+  }
+  /* 4. High-value drops */
+  if(d.high_value_drops&&d.high_value_drops.rows&&d.high_value_drops.rows.length){
+    document.getElementById('compDropsBody').innerHTML=d.high_value_drops.rows.map(function(r){
+      return '<tr><td style="font-weight:600">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td class="num" style="color:#fbbf24;font-weight:600">'+fmt(r[2])+'</td><td class="num">'+fmt(r[3])+'</td><td>'+esc(r[4])+'</td><td>'+(r[5]==='1'||r[5]===1?'<span class="badge badge-green">Yes</span>':'No')+'</td></tr>';
+    }).join('');
+  } else {document.getElementById('compDropsBody').innerHTML='<tr><td colspan="6" class="loading-msg">No data</td></tr>'}
+  /* 5. Exclusive adds */
+  if(d.high_value_adds&&d.high_value_adds.rows&&d.high_value_adds.rows.length){
+    document.getElementById('compAddsBody').innerHTML=d.high_value_adds.rows.map(function(r){
+      return '<tr><td style="font-weight:600">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td class="num" style="color:#4ade80;font-weight:600">'+fmt(r[2])+'</td><td class="num">'+fmt(r[3])+'</td><td>'+esc(r[4])+'</td></tr>';
+    }).join('');
+  } else {document.getElementById('compAddsBody').innerHTML='<tr><td colspan="5" class="loading-msg">No data</td></tr>'}
+  /* 6. Category engagement charts */
+  if(typeof Chart!=='undefined'&&d.category_engagement&&d.category_engagement.rows&&d.category_engagement.rows.length){
+    var cr=d.category_engagement.rows;
+    makeHBar('chartCompCatEng',cr.map(function(r){return r[0]}),cr.map(function(r){return parseInt(r[2])||0}),'Avg Page Views',0);
+    var catLabels=cr.map(function(r){return r[0]});
+    var catAdded=cr.map(function(r){return parseInt(r[4])||0});
+    var catDropped=cr.map(function(r){return parseInt(r[5])||0});
+    makeGrouped('chartCompCatFlow',catLabels,catAdded,catDropped);
+  }
+  /* 7. Multi-platform overlap */
+  if(d.multi_platform_titles&&d.multi_platform_titles.rows&&d.multi_platform_titles.rows.length){
+    document.getElementById('compOverlapBody').innerHTML=d.multi_platform_titles.rows.map(function(r){
+      return '<tr><td style="font-weight:600">'+esc(r[0])+'</td><td class="num"><span class="badge badge-red">'+r[1]+'</span></td><td style="font-size:11px;color:var(--text2)">'+esc(r[2])+'</td><td class="num">'+fmt(r[3])+'</td><td class="num">'+fmt(r[4])+'</td></tr>';
+    }).join('');
+  } else {document.getElementById('compOverlapBody').innerHTML='<tr><td colspan="5" class="loading-msg">No data</td></tr>'}
+  /* 8. Network groups */
+  if(d.network_groups&&d.network_groups.rows&&d.network_groups.rows.length){
+    document.getElementById('compNetworkBody').innerHTML=d.network_groups.rows.map(function(r){
+      var net=(parseInt(r[3])||0)-(parseInt(r[4])||0),cls=net>=0?'badge-green':'badge-red',sign=net>0?'+':'';
+      var isVersant=r[0]==='NBCUniversal';
+      return '<tr style="'+(isVersant?'background:rgba(245,158,11,.06)':'')+'"><td style="font-weight:600">'+(isVersant?'<span style="color:#fbbf24">&#x2605; </span>':'')+esc(r[0])+'</td><td class="num">'+fmt(r[1])+'</td><td class="num">'+fmt(r[2])+'</td><td class="num" style="color:#4ade80">'+fmt(r[3])+'</td><td class="num" style="color:#f87171">'+fmt(r[4])+'</td><td class="num"><span class="badge '+cls+'">'+sign+fmt(net)+'</span></td></tr>';
+    }).join('');
+  } else {document.getElementById('compNetworkBody').innerHTML='<tr><td colspan="6" class="loading-msg">No data</td></tr>'}
 }
 
 /* ── Search debounce ── */
