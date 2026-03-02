@@ -1,0 +1,1395 @@
+{
+  "version": 2,
+  "config": {
+    "sample_questions": [
+      {
+        "id": "01f113f62a901ac4817e7b72bc8964e2",
+        "question": [
+          "Compare the number of titles available on Tubi vs Pluto TV by genre"
+        ]
+      },
+      {
+        "id": "01f113f62a9010778d61d6868eeb6e1b",
+        "question": [
+          "Which production studios have content in the most FAST channels?"
+        ]
+      },
+      {
+        "id": "01f113f62a8f157a87a1f0ef12d0acac",
+        "question": [
+          "What is the typical gap between windows for movies moving from SVOD to AVOD?"
+        ]
+      },
+      {
+        "id": "01f113f62a8e1c3f972f5ae494dd3e3f",
+        "question": [
+          "How many episodes of Drama series are currently available on Hulu?"
+        ]
+      },
+      {
+        "id": "01f113f62a8e127883a6f4f94bb30a3a",
+        "question": [
+          "What genres have the most content available across SVOD platforms?"
+        ]
+      },
+      {
+        "id": "01f113f62a8d188491c2fd886bae326e",
+        "question": [
+          "Show month-over-month title change trends by change type"
+        ]
+      },
+      {
+        "id": "01f113f62a8c1e2b88cbcd1d2fd75db2",
+        "question": [
+          "Which platforms have the most exclusive VOD content?"
+        ]
+      },
+      {
+        "id": "01f113f62a8c13a6a65e15bcb8c2d9db",
+        "question": [
+          "What is the average window duration by lifecycle stage for series content?"
+        ]
+      },
+      {
+        "id": "01f113f62a8b16c2bd25e5f05d350e1c",
+        "question": [
+          "How many titles were added vs removed each month in 2025?"
+        ]
+      },
+      {
+        "id": "01f113f62a8a19d1bbfa97d84cd33b2c",
+        "question": [
+          "Which titles are exclusively available on Netflix in the US?"
+        ]
+      },
+      {
+        "id": "01f113f62a891f83a86b75ebff162213",
+        "question": [
+          "What percentage of programming schedule slots are repeats vs first-run?"
+        ]
+      },
+      {
+        "id": "01f113f62a881c3390b5f3bec1f0b600",
+        "question": [
+          "Show me the top 10 channel owners by number of channels"
+        ]
+      },
+      {
+        "id": "01f113f62a851499beceb565962a92b1",
+        "question": [
+          "What content airs during primetime on Comedy channels this week?"
+        ]
+      },
+      {
+        "id": "01f113f62a8419c7856f378b5bf5efe1",
+        "question": [
+          "Which providers carry the most channels?"
+        ]
+      },
+      {
+        "id": "01f113f62a831dd7aec84cbee88e091c",
+        "question": [
+          "How many active FAST channels are there by genre?"
+        ]
+      }
+    ]
+  },
+  "data_sources": {
+    "tables": [
+      {
+        "identifier": "jay_mehta_catalog.versant_stream_metrics.channel_availability"
+      },
+      {
+        "identifier": "jay_mehta_catalog.versant_stream_metrics.channels"
+      },
+      {
+        "identifier": "jay_mehta_catalog.versant_stream_metrics.content_catalog"
+      },
+      {
+        "identifier": "jay_mehta_catalog.versant_stream_metrics.programming_schedule"
+      },
+      {
+        "identifier": "jay_mehta_catalog.versant_stream_metrics.providers"
+      },
+      {
+        "identifier": "jay_mehta_catalog.versant_stream_metrics.vod_episode_availability"
+      },
+      {
+        "identifier": "jay_mehta_catalog.versant_stream_metrics.vod_title_availability"
+      },
+      {
+        "identifier": "jay_mehta_catalog.versant_stream_metrics.vod_title_mom_changes"
+      },
+      {
+        "identifier": "jay_mehta_catalog.versant_stream_metrics.window_non_series"
+      },
+      {
+        "identifier": "jay_mehta_catalog.versant_stream_metrics.window_series"
+      }
+    ]
+  },
+  "instructions": {
+    "text_instructions": [
+      {
+        "id": "a942cfde2b5c42c9acbb8c69e1d12e3d",
+        "content": [
+          "## Domain & Abbreviations\n",
+          "\n",
+          "\n",
+          "\n",
+          "This Genie Space contains streaming media distribution data from Stream Metrics, covering three domains: FAST TV, VOD availability, and content windowing.\n",
+          "\n",
+          "\n",
+          "\n",
+          "**Key abbreviations and terms:**\n",
+          "\n",
+          "- FAST = Free Ad-Supported Streaming Television (e.g., Pluto TV, Tubi, Roku Channel, Samsung TV Plus, Freevee)\n",
+          "\n",
+          "- VOD = Video On Demand \u2014 content available to watch at any time\n",
+          "\n",
+          "- SVOD = Subscription VOD (e.g., Netflix, Disney+, Hulu, HBO Max, Paramount+, Apple TV+, Amazon Prime Video)\n",
+          "\n",
+          "- AVOD = Ad-supported VOD (e.g., Tubi, Pluto TV on-demand, Peacock free tier)\n",
+          "\n",
+          "- TVOD = Transactional VOD \u2014 pay-per-view or rental (e.g., iTunes, Amazon Video rentals)\n",
+          "\n",
+          "- EST = Electronic Sell-Through \u2014 digital purchase to own (e.g., buying a movie on Apple TV)\n",
+          "\n",
+          "- PVOD = Premium VOD \u2014 early digital release window before standard VOD, typically $19.99-$29.99\n",
+          "\n",
+          "- MoM = Month-over-Month \u2014 refers to changes between consecutive months in vod_title_mom_changes\n",
+          "\n",
+          "- OTT = Over-The-Top \u2014 streaming content delivered directly over the internet, bypassing traditional cable/satellite\n",
+          "\n",
+          "- Linear = Traditional scheduled broadcasting on a channel (as opposed to on-demand)\n",
+          "\n",
+          "- Windowing = The sequential release strategy where content moves through exclusive distribution windows over time\n",
+          "\n",
+          "- Window lifecycle = The progression path content follows: for series it is SVOD Exclusive \u2192 SVOD Shared \u2192 AVOD \u2192 FAST \u2192 Library; for movies it is Theatrical \u2192 PVOD \u2192 SVOD Exclusive \u2192 SVOD Shared \u2192 AVOD \u2192 FAST \u2192 Library\n",
+          "\n",
+          "- Primetime = The peak viewing period, typically 8:00 PM to 11:00 PM local time. In programming_schedule, is_primetime = true indicates primetime airings\n",
+          "\n",
+          "- Time block = Daypart classifications in programming_schedule: Early Morning, Morning, Afternoon, Prime Access, Primetime, Late Night, Overnight\n",
+          "\n",
+          "- White-label channel = A channel branded and operated by a platform rather than a content owner; identified by is_white_label = true in the channels table\n",
+          "\n",
+          "- Exclusive content = Content available on only one platform in a territory; in vod_title_availability, is_exclusive = true\n",
+          "\n",
+          "- First-run = A title airing for the first time (is_repeat = false in programming_schedule), as opposed to a repeat airing\n",
+          "\n",
+          "- Territory = A geographic region identified by ISO 2-letter country code (US, CA, UK, DE, FR, AU, JP, BR, MX, IN, KR, IT, ES, SE, NL)\n",
+          "\n",
+          "\n",
+          "\n",
+          "**Platform name conventions:**\n",
+          "\n",
+          "- Always use the exact platform names stored in the data: Netflix, Hulu, Disney+, Amazon Prime Video, HBO Max, Peacock, Paramount+, Apple TV+, Pluto TV, Tubi, Roku Channel, Samsung TV Plus, Crackle, Freevee, Xumo, Plex, Amazon Freevee\n",
+          "\n",
+          "- When users say \"Amazon\" they likely mean Amazon Prime Video (SVOD) unless they specify Freevee (AVOD/FAST)\n",
+          "\n",
+          "- When users say \"Apple\" they mean Apple TV+\n",
+          "\n",
+          "- When users say \"HBO\" they mean HBO Max\n",
+          "\n",
+          "- When users say \"Paramount\" they mean Paramount+\n",
+          "\n",
+          "\n",
+          "\n",
+          "## Data Domain Guidance\n",
+          "\n",
+          "\n",
+          "\n",
+          "**FAST TV tables (channels, providers, content_catalog, programming_schedule, channel_availability):**\n",
+          "\n",
+          "- Use the channels table for questions about channel counts, genres, owners, or languages\n",
+          "\n",
+          "- Use programming_schedule for questions about what airs when, primetime analysis, schedule density, repeat rates, or time-of-day analysis\n",
+          "\n",
+          "- Use channel_availability for questions about distribution: which channels are on which providers, in which territories\n",
+          "\n",
+          "- Use content_catalog for questions about the content library: title metadata, ratings, genres, production studios\n",
+          "\n",
+          "- For \"channel lineup\" questions, join channels to channel_availability to providers\n",
+          "\n",
+          "\n",
+          "\n",
+          "**VOD tables (vod_title_availability, vod_episode_availability, vod_title_mom_changes):**\n",
+          "\n",
+          "- Use vod_title_availability for questions about what titles are available where, platform comparisons, exclusivity analysis, or content type breakdowns\n",
+          "\n",
+          "- Use vod_episode_availability for episode-level drill-downs: how many episodes are available per season, episode completeness\n",
+          "\n",
+          "- Use vod_title_mom_changes for trend analysis: what was added/removed each month, platform churn, window transitions\n",
+          "\n",
+          "- The change_type field values are: Added, Removed, Renewed, Platform Switch, Window Change\n",
+          "\n",
+          "- \"Churn\" means titles being Removed from a platform. \"Net adds\" = Added minus Removed in a given month\n",
+          "\n",
+          "\n",
+          "\n",
+          "**Windowing tables (window_series, window_non_series):**\n",
+          "\n",
+          "- Use window_series for series lifecycle tracking: how long series stay in each window, when they transition\n",
+          "\n",
+          "- Use window_non_series for movie/special lifecycle: theatrical-to-library timeline analysis\n",
+          "\n",
+          "- window_lifecycle_stage for series: SVOD Exclusive, SVOD Shared, AVOD, FAST, Library\n",
+          "\n",
+          "- window_lifecycle_stage for non-series: Theatrical, PVOD, SVOD Exclusive, SVOD Shared, AVOD, FAST, Library\n",
+          "\n",
+          "- window_start_date and window_end_date define the time bounds of each window stage\n",
+          "\n",
+          "- window_duration_days shows how long content spent in that stage\n",
+          "\n",
+          "- When users ask about \"content lifecycle\" or \"release strategy,\" use the windowing tables\n",
+          "\n",
+          "\n",
+          "\n",
+          "## Query Patterns & Business Logic\n",
+          "\n",
+          "\n",
+          "\n",
+          "- When asked about \"top platforms\" or \"biggest platforms,\" rank by number of available titles using vod_title_availability grouped by platform\n",
+          "\n",
+          "- When asked about \"content diversity,\" count distinct genres or content types\n",
+          "\n",
+          "- When asked about \"market coverage\" or \"reach,\" count distinct territories\n",
+          "\n",
+          "- When asked about \"schedule fill rate,\" calculate the ratio of scheduled hours to total hours per channel\n",
+          "\n",
+          "- For \"platform comparison\" questions, always include a GROUP BY platform and consider filtering to a specific territory for fair comparison\n",
+          "\n",
+          "- For \"availability trends\" over time, use vod_title_mom_changes with GROUP BY report_month and change_type\n",
+          "\n",
+          "- When computing \"exclusive content percentage,\" count titles WHERE is_exclusive = true divided by total titles per platform\n",
+          "\n",
+          "- \"Recently added\" means change_type = 'Added' in the most recent report_month in vod_title_mom_changes\n",
+          "\n",
+          "- \"Content in the FAST window\" means window_lifecycle_stage = 'FAST' and the window is currently active (window_end_date IS NULL or window_end_date >= CURRENT_DATE)\n",
+          "\n",
+          "\n",
+          "\n",
+          "## Formatting & Presentation\n",
+          "\n",
+          "\n",
+          "\n",
+          "- Always round percentages to 2 decimal places\n",
+          "\n",
+          "- Format large numbers with commas for readability (e.g., use FORMAT_NUMBER)\n",
+          "\n",
+          "- When showing date ranges, use YYYY-MM-DD format\n",
+          "\n",
+          "- For duration analysis (window_duration_days), present averages rounded to whole days\n",
+          "\n",
+          "- When showing top-N lists, default to top 10 unless the user specifies otherwise\n",
+          "\n",
+          "- Order results by the most meaningful metric in descending order unless asked otherwise\n",
+          "\n",
+          "- When presenting platform comparisons, always include the territory context\n",
+          "\n",
+          "\n",
+          "\n",
+          "## Clarification Questions\n",
+          "\n",
+          "\n",
+          "\n",
+          "When users ask about \"availability\" without specifying FAST vs VOD, ask: \"Are you asking about FAST TV channel availability (which providers carry which channels) or VOD title availability (which titles are on which streaming platforms)?\"\n",
+          "\n",
+          "\n",
+          "\n",
+          "When users ask about \"content\" without specifying the domain, ask: \"Would you like to analyze the FAST TV content catalog (titles airing on FAST channels), VOD title availability (titles on streaming platforms), or the content windowing lifecycle?\"\n",
+          "\n",
+          "\n",
+          "\n",
+          "When users ask about \"trends\" without a time range, ask: \"What time period would you like to analyze? The MoM changes data covers the last 12 months. Please specify a date range or number of months.\"\n",
+          "\n",
+          "\n",
+          "\n",
+          "When users ask about platform performance without specifying a territory, ask: \"Which territory should I focus on? Platform availability varies significantly by region. Common territories: US, CA, UK, DE, FR, AU.\"\n",
+          "\n",
+          "\n",
+          "\n",
+          "When users ask about \"all content\" or \"everything,\" guide them: \"The data spans 3 domains \u2014 FAST TV (channels/schedules), VOD availability (titles/episodes), and windowing (lifecycle tracking). Which domain would you like to explore first?\"\n",
+          "\n",
+          "\n",
+          "\n",
+          "## Instructions you must follow when providing summaries\n",
+          "\n",
+          "\n",
+          "\n",
+          "- Include the total row count when applicable (e.g., \"Across 5,508 title-availability records...\")\n",
+          "\n",
+          "- When summarizing platform data, always mention the territory scope\n",
+          "\n",
+          "- Use bullet points for multi-part summaries\n",
+          "\n",
+          "- Cite specific table and column names when the answer involves joins\n",
+          "\n",
+          "- Highlight notable outliers or patterns (e.g., \"Netflix has 3x more exclusive titles than the next platform\")\n",
+          "\n",
+          "- When showing time-based trends, note the direction of change (increasing, decreasing, stable)\n",
+          "\n",
+          "## SQL Expression Definitions (Key Metrics)\n",
+          "\n",
+          "Use these SQL expression definitions when users ask about these business metrics:\n",
+          "\n",
+          "### Measures (Aggregations)\n",
+          "\n",
+          "**Total Active Channels**: COUNT(*) FROM channels WHERE status = 'active'\n",
+          "- Synonyms: channel count, number of channels, active channels\n",
+          "\n",
+          "**Primetime Percentage**: ROUND(SUM(CASE WHEN is_primetime = true THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) FROM programming_schedule\n",
+          "- Synonyms: primetime share, primetime ratio, prime time %\n",
+          "\n",
+          "**First-Run Rate**: ROUND(SUM(CASE WHEN is_repeat = false THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) FROM programming_schedule\n",
+          "- Synonyms: new content rate, original airing percentage, first run %\n",
+          "\n",
+          "**Exclusive Content Percentage**: ROUND(SUM(CASE WHEN is_exclusive = true THEN 1 ELSE 0 END) * 100.0 / COUNT(DISTINCT title_id), 2) FROM vod_title_availability\n",
+          "- Synonyms: exclusivity rate, exclusive %, exclusive content share\n",
+          "\n",
+          "**Net Adds**: SUM(CASE WHEN change_type = 'Added' THEN 1 ELSE 0 END) - SUM(CASE WHEN change_type = 'Removed' THEN 1 ELSE 0 END) FROM vod_title_mom_changes GROUP BY report_month\n",
+          "- Synonyms: net additions, net growth, title growth\n",
+          "\n",
+          "**Content Churn Rate**: ROUND(SUM(CASE WHEN change_type = 'Removed' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) FROM vod_title_mom_changes\n",
+          "- Synonyms: removal rate, attrition rate, churn %\n",
+          "\n",
+          "**Average Window Duration**: ROUND(AVG(window_duration_days), 0) FROM window_series or window_non_series\n",
+          "- Synonyms: avg window length, typical window, mean duration\n",
+          "\n",
+          "**Platform Library Size**: COUNT(DISTINCT title_id) FROM vod_title_availability WHERE is_currently_available = true GROUP BY platform\n",
+          "- Synonyms: catalog size, library count, content library, number of titles\n",
+          "\n",
+          "### Filters (Boolean Conditions)\n",
+          "\n",
+          "**Currently Available**: is_currently_available = true\n",
+          "- Synonyms: active, live, available now, currently on\n",
+          "\n",
+          "**Primetime Only**: is_primetime = true\n",
+          "- Synonyms: primetime, prime time, evening schedule, peak hours\n",
+          "\n",
+          "**First-Run Only**: is_repeat = false\n",
+          "- Synonyms: new content, original, first airing, not a repeat\n",
+          "\n",
+          "**Exclusive Only**: is_exclusive = true\n",
+          "- Synonyms: exclusive, platform exclusive, only on\n",
+          "\n",
+          "**Active Window**: window_end_date IS NULL OR window_end_date >= CURRENT_DATE()\n",
+          "- Synonyms: current window, active stage, currently in window\n",
+          "\n",
+          "**SVOD Content**: availability_type = 'SVOD'\n",
+          "- Synonyms: subscription, subscription streaming, paid streaming\n",
+          "\n",
+          "**FAST Content**: availability_type = 'FAST'\n",
+          "- Synonyms: free streaming, ad-supported, free channels\n",
+          "\n",
+          "**Recently Changed**: report_month = (SELECT MAX(report_month) FROM vod_title_mom_changes)\n",
+          "- Synonyms: latest month, most recent changes, recent updates\n",
+          "\n",
+          "### Dimensions (Grouping Attributes)\n",
+          "\n",
+          "**Time Block**: time_block column in programming_schedule with values: Early Morning, Morning, Afternoon, Prime Access, Primetime, Late Night, Overnight\n",
+          "- Use for daypart analysis of programming schedules\n",
+          "\n",
+          "**Content Type**: content_type column with values: Series, Movie, Special\n",
+          "- Use for breaking down analysis by content format\n",
+          "\n",
+          "**Availability Type**: availability_type column with values: SVOD, AVOD, TVOD, EST, FAST\n",
+          "- Use for comparing distribution models\n",
+          "\n",
+          "**Window Lifecycle Stage (Series)**: window_lifecycle_stage ordered: SVOD Exclusive, SVOD Shared, AVOD, FAST, Library\n",
+          "- Use for series lifecycle analysis. Always order by lifecycle progression, not alphabetically.\n",
+          "\n",
+          "**Window Lifecycle Stage (Movies)**: window_lifecycle_stage ordered: Theatrical, PVOD, SVOD Exclusive, SVOD Shared, AVOD, FAST, Library\n",
+          "- Use for movie release strategy analysis. Always order by lifecycle progression, not alphabetically.\n",
+          "\n",
+          "## Example SQL Queries for Common Questions\n",
+          "\n",
+          "### FAST TV Examples\n",
+          "\n",
+          "Example: How many active FAST channels are there by genre?\n",
+          "SQL: SELECT genre, COUNT(*) AS channel_count, ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS pct_of_total FROM jay_mehta_catalog.versant_stream_metrics.channels WHERE status = 'active' GROUP BY genre ORDER BY channel_count DESC\n",
+          "\n",
+          "Example: Which providers carry the most channels?\n",
+          "SQL: SELECT p.provider_name, p.parent_company, COUNT(DISTINCT ca.channel_id) AS channel_count, COUNT(DISTINCT ca.territory) AS territory_count FROM jay_mehta_catalog.versant_stream_metrics.providers p JOIN jay_mehta_catalog.versant_stream_metrics.channel_availability ca ON p.provider_id = ca.provider_id WHERE ca.is_currently_available = true GROUP BY p.provider_name, p.parent_company ORDER BY channel_count DESC\n",
+          "\n",
+          "Example: What content airs during primetime on Comedy channels?\n",
+          "SQL: SELECT cc.title, cc.content_type, COUNT(*) AS airing_count, ROUND(AVG(cc.imdb_rating), 1) AS avg_rating FROM jay_mehta_catalog.versant_stream_metrics.programming_schedule ps JOIN jay_mehta_catalog.versant_stream_metrics.channels c ON ps.channel_id = c.channel_id JOIN jay_mehta_catalog.versant_stream_metrics.content_catalog cc ON ps.content_id = cc.content_id WHERE c.genre = 'Comedy' AND ps.is_primetime = true GROUP BY cc.title, cc.content_type ORDER BY airing_count DESC\n",
+          "\n",
+          "Example: What is the repeat rate by time block across all channels?\n",
+          "SQL: SELECT ps.time_block, COUNT(*) AS total_airings, SUM(CASE WHEN ps.is_repeat = true THEN 1 ELSE 0 END) AS repeats, ROUND(SUM(CASE WHEN ps.is_repeat = true THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS repeat_pct FROM jay_mehta_catalog.versant_stream_metrics.programming_schedule ps GROUP BY ps.time_block ORDER BY CASE ps.time_block WHEN 'Early Morning' THEN 1 WHEN 'Morning' THEN 2 WHEN 'Afternoon' THEN 3 WHEN 'Prime Access' THEN 4 WHEN 'Primetime' THEN 5 WHEN 'Late Night' THEN 6 WHEN 'Overnight' THEN 7 END\n",
+          "\n",
+          "### VOD Examples\n",
+          "\n",
+          "Example: Which platforms have the most exclusive VOD content in the US?\n",
+          "SQL: SELECT platform, COUNT(DISTINCT title_id) AS total_titles, SUM(CASE WHEN is_exclusive = true THEN 1 ELSE 0 END) AS exclusive_titles, ROUND(SUM(CASE WHEN is_exclusive = true THEN 1 ELSE 0 END) * 100.0 / COUNT(DISTINCT title_id), 2) AS exclusive_pct FROM jay_mehta_catalog.versant_stream_metrics.vod_title_availability WHERE territory = 'US' AND is_currently_available = true GROUP BY platform ORDER BY exclusive_titles DESC\n",
+          "\n",
+          "Example: Show month-over-month title change trends\n",
+          "SQL: SELECT report_month, change_type, COUNT(DISTINCT title_id) AS title_count FROM jay_mehta_catalog.versant_stream_metrics.vod_title_mom_changes GROUP BY report_month, change_type ORDER BY report_month, change_type\n",
+          "\n",
+          "Example: What is the net adds trend by month?\n",
+          "SQL: SELECT report_month, SUM(CASE WHEN change_type = 'Added' THEN 1 ELSE 0 END) AS added, SUM(CASE WHEN change_type = 'Removed' THEN 1 ELSE 0 END) AS removed, SUM(CASE WHEN change_type = 'Added' THEN 1 ELSE 0 END) - SUM(CASE WHEN change_type = 'Removed' THEN 1 ELSE 0 END) AS net_adds FROM jay_mehta_catalog.versant_stream_metrics.vod_title_mom_changes GROUP BY report_month ORDER BY report_month\n",
+          "\n",
+          "Example: How many episodes are available per platform in the US?\n",
+          "SQL: SELECT platform, COUNT(DISTINCT title_id) AS title_count, COUNT(*) AS total_episodes, SUM(CASE WHEN is_currently_available = true THEN 1 ELSE 0 END) AS available_episodes FROM jay_mehta_catalog.versant_stream_metrics.vod_episode_availability WHERE territory = 'US' GROUP BY platform ORDER BY total_episodes DESC\n",
+          "\n",
+          "### Windowing Examples\n",
+          "\n",
+          "Example: What is the average window duration by lifecycle stage for series?\n",
+          "SQL: SELECT window_lifecycle_stage, COUNT(DISTINCT title_id) AS titles, ROUND(AVG(window_duration_days), 0) AS avg_days, MIN(window_duration_days) AS min_days, MAX(window_duration_days) AS max_days FROM jay_mehta_catalog.versant_stream_metrics.window_series GROUP BY window_lifecycle_stage ORDER BY CASE window_lifecycle_stage WHEN 'SVOD Exclusive' THEN 1 WHEN 'SVOD Shared' THEN 2 WHEN 'AVOD' THEN 3 WHEN 'FAST' THEN 4 WHEN 'Library' THEN 5 END\n",
+          "\n",
+          "Example: How quickly do movies progress through release windows?\n",
+          "SQL: SELECT window_lifecycle_stage, ROUND(AVG(window_duration_days), 0) AS avg_days, COUNT(DISTINCT title_id) AS title_count FROM jay_mehta_catalog.versant_stream_metrics.window_non_series GROUP BY window_lifecycle_stage ORDER BY CASE window_lifecycle_stage WHEN 'Theatrical' THEN 1 WHEN 'PVOD' THEN 2 WHEN 'SVOD Exclusive' THEN 3 WHEN 'SVOD Shared' THEN 4 WHEN 'AVOD' THEN 5 WHEN 'FAST' THEN 6 WHEN 'Library' THEN 7 END\n",
+          "\n",
+          "Example: Which series are currently in the FAST window?\n",
+          "SQL: SELECT title_id, title, genre, window_start_date, window_duration_days FROM jay_mehta_catalog.versant_stream_metrics.window_series WHERE window_lifecycle_stage = 'FAST' AND (window_end_date IS NULL OR window_end_date >= CURRENT_DATE()) ORDER BY window_start_date DESC\n",
+          "\n",
+          "### Cross-Domain Examples\n",
+          "\n",
+          "Example: Which titles are available on both FAST channels and VOD platforms?\n",
+          "SQL: SELECT cc.title, cc.content_type, cc.genre, COUNT(DISTINCT ps.channel_id) AS fast_channels, COUNT(DISTINCT vta.platform) AS vod_platforms FROM jay_mehta_catalog.versant_stream_metrics.content_catalog cc JOIN jay_mehta_catalog.versant_stream_metrics.programming_schedule ps ON cc.content_id = ps.content_id JOIN jay_mehta_catalog.versant_stream_metrics.vod_title_availability vta ON cc.title = vta.title WHERE vta.territory = 'US' AND vta.is_currently_available = true GROUP BY cc.title, cc.content_type, cc.genre ORDER BY fast_channels + vod_platforms DESC\n",
+          "\n",
+          "Example: Compare platform presence across territories\n",
+          "SQL: SELECT platform, territory, COUNT(DISTINCT title_id) AS title_count, SUM(CASE WHEN is_exclusive = true THEN 1 ELSE 0 END) AS exclusive_count FROM jay_mehta_catalog.versant_stream_metrics.vod_title_availability WHERE is_currently_available = true GROUP BY platform, territory ORDER BY platform, title_count DESC\n",
+          "\n",
+          "## Available SQL Functions\n",
+          "\n",
+          "The following UC functions are registered and can be called directly for trusted metric calculations:\n",
+          "- jay_mehta_catalog.versant_stream_metrics.fast_channel_count_by_genre() -- FAST channel distribution by genre\n",
+          "- jay_mehta_catalog.versant_stream_metrics.fast_provider_lineup_size() -- Provider channel lineup comparison\n",
+          "- jay_mehta_catalog.versant_stream_metrics.fast_primetime_schedule_analysis() -- Primetime vs non-primetime breakdown\n",
+          "- jay_mehta_catalog.versant_stream_metrics.fast_content_airtime_leaders() -- Top 25 most-aired FAST titles\n",
+          "- jay_mehta_catalog.versant_stream_metrics.vod_platform_title_counts(territory) -- Platform library sizes, default 'US'\n",
+          "- jay_mehta_catalog.versant_stream_metrics.vod_content_type_breakdown(territory) -- Content type and genre breakdown\n",
+          "- jay_mehta_catalog.versant_stream_metrics.vod_mom_change_summary() -- Month-over-month availability change trends\n",
+          "- jay_mehta_catalog.versant_stream_metrics.vod_episode_completeness(territory) -- Episode availability per platform\n",
+          "- jay_mehta_catalog.versant_stream_metrics.window_series_lifecycle_summary() -- Series windowing lifecycle stages\n",
+          "- jay_mehta_catalog.versant_stream_metrics.window_nonseries_lifecycle_summary() -- Movie windowing lifecycle stages\n",
+          "- jay_mehta_catalog.versant_stream_metrics.cross_domain_title_distribution(territory) -- Titles on both FAST and VOD\n",
+          "- jay_mehta_catalog.versant_stream_metrics.platform_territory_heatmap() -- Platform presence across territories\n"
+        ]
+      }
+    ],
+    "example_question_sqls": [
+      {
+        "id": "01f1140e50721a4999bf6fab4f3bdac5",
+        "question": [
+          "fast_channel_count_by_genre"
+        ],
+        "sql": [
+          "SELECT\n",
+          "    genre,\n",
+          "    COUNT(*) AS channel_count,\n",
+          "    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS pct_of_total\n",
+          "  FROM jay_mehta_catalog.versant_stream_metrics.channels\n",
+          "  WHERE status = 'active'\n",
+          "  GROUP BY genre\n",
+          "  ORDER BY channel_count DESC"
+        ]
+      },
+      {
+        "id": "01f1140e66de1cef866c634def9a55de",
+        "question": [
+          "fast_content_airtime_leaders"
+        ],
+        "sql": [
+          "SELECT\n",
+          "    cc.title,\n",
+          "    cc.content_type,\n",
+          "    cc.genre,\n",
+          "    COUNT(*) AS airing_count,\n",
+          "    COUNT(DISTINCT ps.channel_id) AS channel_count,\n",
+          "    ROUND(AVG(cc.imdb_rating), 1) AS avg_imdb_rating\n",
+          "  FROM jay_mehta_catalog.versant_stream_metrics.programming_schedule ps\n",
+          "  JOIN jay_mehta_catalog.versant_stream_metrics.content_catalog cc ON ps.content_id = cc.content_id\n",
+          "  GROUP BY cc.title, cc.content_type, cc.genre\n",
+          "  ORDER BY airing_count DESC\n",
+          "  LIMIT 25"
+        ]
+      },
+      {
+        "id": "01f1140e7550153180ccdeb145702e10",
+        "question": [
+          "fast_primetime_schedule_analysis"
+        ],
+        "sql": [
+          "SELECT\n",
+          "    c.genre,\n",
+          "    COUNT(*) AS total_airings,\n",
+          "    SUM(CASE WHEN ps.is_primetime = true THEN 1 ELSE 0 END) AS primetime_airings,\n",
+          "    ROUND(SUM(CASE WHEN ps.is_primetime = true THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS primetime_pct,\n",
+          "    ROUND(SUM(CASE WHEN ps.is_repeat = false THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS first_run_pct\n",
+          "  FROM jay_mehta_catalog.versant_stream_metrics.programming_schedule ps\n",
+          "  JOIN jay_mehta_catalog.versant_stream_metrics.channels c ON ps.channel_id = c.channel_id\n",
+          "  GROUP BY c.genre\n",
+          "  ORDER BY total_airings DESC"
+        ]
+      },
+      {
+        "id": "01f1140e7ff91a0f8bfe37c47616b907",
+        "question": [
+          "fast_provider_lineup_size"
+        ],
+        "sql": [
+          "SELECT\n",
+          "    p.provider_name,\n",
+          "    p.parent_company,\n",
+          "    COUNT(DISTINCT ca.channel_id) AS channel_count,\n",
+          "    COUNT(DISTINCT ca.territory) AS territory_count\n",
+          "  FROM jay_mehta_catalog.versant_stream_metrics.providers p\n",
+          "  JOIN jay_mehta_catalog.versant_stream_metrics.channel_availability ca ON p.provider_id = ca.provider_id\n",
+          "  WHERE ca.is_currently_available = true\n",
+          "  GROUP BY p.provider_name, p.parent_company\n",
+          "  ORDER BY channel_count DESC"
+        ]
+      },
+      {
+        "id": "01f1140e88f01bb381162894a1cd6ce0",
+        "question": [
+          "platform_territory_heatmap"
+        ],
+        "sql": [
+          "SELECT\n",
+          "    platform,\n",
+          "    territory,\n",
+          "    COUNT(DISTINCT title_id) AS title_count,\n",
+          "    SUM(CASE WHEN is_exclusive = true THEN 1 ELSE 0 END) AS exclusive_count\n",
+          "  FROM jay_mehta_catalog.versant_stream_metrics.vod_title_availability\n",
+          "  WHERE is_currently_available = true\n",
+          "  GROUP BY platform, territory\n",
+          "  ORDER BY platform, title_count DESC"
+        ]
+      },
+      {
+        "id": "01f1140e94a713d88372aacb852de3e5",
+        "question": [
+          "vod_content_type_breakdown"
+        ],
+        "sql": [
+          "SELECT\n",
+          "    content_type,\n",
+          "    genre,\n",
+          "    COUNT(DISTINCT title_id) AS title_count,\n",
+          "    COUNT(DISTINCT platform) AS platform_count,\n",
+          "    ROUND(AVG(total_seasons_available), 1) AS avg_seasons\n",
+          "  FROM jay_mehta_catalog.versant_stream_metrics.vod_title_availability\n",
+          "  WHERE territory = territory_filter AND is_currently_available = true\n",
+          "  GROUP BY content_type, genre\n",
+          "  ORDER BY title_count DESC"
+        ]
+      },
+      {
+        "id": "01f1140e9dc91af1bf9e05e80d5a9a09",
+        "question": [
+          "vod_episode_completeness"
+        ],
+        "sql": [
+          "SELECT\n",
+          "    platform,\n",
+          "    COUNT(DISTINCT title_id) AS title_count,\n",
+          "    COUNT(*) AS total_episodes,\n",
+          "    SUM(CASE WHEN is_currently_available = true THEN 1 ELSE 0 END) AS available_episodes,\n",
+          "    ROUND(COUNT(*) * 1.0 / NULLIF(COUNT(DISTINCT title_id), 0), 1) AS avg_episodes_per_title\n",
+          "  FROM jay_mehta_catalog.versant_stream_metrics.vod_episode_availability\n",
+          "  WHERE territory = territory_filter\n",
+          "  GROUP BY platform\n",
+          "  ORDER BY total_episodes DESC"
+        ]
+      },
+      {
+        "id": "01f1140ea66d1aa893a5178cd2108d49",
+        "question": [
+          "vod_mom_change_summary"
+        ],
+        "sql": [
+          "SELECT\n",
+          "    report_month,\n",
+          "    change_type,\n",
+          "    COUNT(DISTINCT title_id) AS title_count,\n",
+          "    COUNT(DISTINCT COALESCE(new_platform, platform)) AS platform_count,\n",
+          "    COUNT(DISTINCT territory) AS territory_count\n",
+          "  FROM jay_mehta_catalog.versant_stream_metrics.vod_title_mom_changes\n",
+          "  GROUP BY report_month, change_type\n",
+          "  ORDER BY report_month DESC, title_count DESC"
+        ]
+      },
+      {
+        "id": "01f1140eb1361bcf9937454bd0ec7274",
+        "question": [
+          "vod_platform_title_counts"
+        ],
+        "sql": [
+          "SELECT\n",
+          "    platform,\n",
+          "    availability_type,\n",
+          "    COUNT(DISTINCT title_id) AS total_titles,\n",
+          "    SUM(CASE WHEN is_exclusive = true THEN 1 ELSE 0 END) AS exclusive_titles,\n",
+          "    ROUND(SUM(CASE WHEN is_exclusive = true THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(DISTINCT title_id), 0), 2) AS exclusive_pct\n",
+          "  FROM jay_mehta_catalog.versant_stream_metrics.vod_title_availability\n",
+          "  WHERE territory = territory_filter AND is_currently_available = true\n",
+          "  GROUP BY platform, availability_type\n",
+          "  ORDER BY total_titles DESC"
+        ]
+      },
+      {
+        "id": "01f1140eb9d5121899d0a8ae51c754f6",
+        "question": [
+          "window_nonseries_lifecycle_summary"
+        ],
+        "sql": [
+          "SELECT\n",
+          "    window_lifecycle_stage,\n",
+          "    COUNT(DISTINCT title_id) AS title_count,\n",
+          "    ROUND(AVG(window_duration_days), 0) AS avg_window_days,\n",
+          "    MIN(window_duration_days) AS min_window_days,\n",
+          "    MAX(window_duration_days) AS max_window_days,\n",
+          "    SUM(CASE WHEN window_end_date IS NULL OR window_end_date >= CURRENT_DATE() THEN 1 ELSE 0 END) AS currently_active\n",
+          "  FROM jay_mehta_catalog.versant_stream_metrics.window_non_series\n",
+          "  GROUP BY window_lifecycle_stage\n",
+          "  ORDER BY CASE window_lifecycle_stage WHEN 'Theatrical' THEN 1 WHEN 'PVOD' THEN 2 WHEN 'SVOD Exclusive' THEN 3 WHEN 'SVOD Shared' THEN 4 WHEN 'AVOD' THEN 5 WHEN 'FAST' THEN 6 WHEN 'Library' THEN 7 ELSE 8 END"
+        ]
+      },
+      {
+        "id": "01f1140ec3e91a81a62ef7b4a7a774e7",
+        "question": [
+          "window_series_lifecycle_summary"
+        ],
+        "sql": [
+          "SELECT\n",
+          "    window_lifecycle_stage,\n",
+          "    COUNT(DISTINCT title_id) AS title_count,\n",
+          "    ROUND(AVG(window_duration_days), 0) AS avg_window_days,\n",
+          "    MIN(window_duration_days) AS min_window_days,\n",
+          "    MAX(window_duration_days) AS max_window_days,\n",
+          "    SUM(CASE WHEN window_end_date IS NULL OR window_end_date >= CURRENT_DATE() THEN 1 ELSE 0 END) AS currently_active\n",
+          "  FROM jay_mehta_catalog.versant_stream_metrics.window_series\n",
+          "  GROUP BY window_lifecycle_stage\n",
+          "  ORDER BY CASE window_lifecycle_stage WHEN 'SVOD Exclusive' THEN 1 WHEN 'SVOD Shared' THEN 2 WHEN 'AVOD' THEN 3 WHEN 'FAST' THEN 4 WHEN 'Library' THEN 5 ELSE 6 END"
+        ]
+      }
+    ],
+    "sql_functions": [
+      {
+        "id": "01f1140e3e8e118188dc4a0a31bb3533",
+        "identifier": "jay_mehta_catalog.versant_stream_metrics.cross_domain_title_distribution"
+      }
+    ],
+    "join_specs": [
+      {
+        "id": "01f113fdc8ba1b80a9b653c981b42c7f",
+        "left": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.channels",
+          "alias": "channels"
+        },
+        "right": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.programming_schedule",
+          "alias": "programming_schedule"
+        },
+        "sql": [
+          "`channels`.`channel_id` = `programming_schedule`.`channel_id`",
+          "--rt=FROM_RELATIONSHIP_TYPE_ONE_TO_MANY--"
+        ],
+        "instruction": [
+          "Use\u00a0when\u00a0you\u00a0need\u00a0channel\u00a0metadata\u00a0(genre, owner, language) for\u00a0scheduled\u00a0programming. Always\u00a0filter\u00a0channels.status = 'active'\u00a0for current\u00a0channels."
+        ]
+      },
+      {
+        "id": "01f113fdd2fa1ae0a51c21b9571f5fad",
+        "left": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.channels",
+          "alias": "channels"
+        },
+        "right": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.channel_availability",
+          "alias": "channel_availability"
+        },
+        "sql": [
+          "`channels`.`channel_id` = `channel_availability`.`channel_id`",
+          "--rt=FROM_RELATIONSHIP_TYPE_ONE_TO_MANY--"
+        ],
+        "instruction": [
+          "Use to\u00a0find\u00a0which\u00a0providers\u00a0carry\u00a0a\u00a0channel. Combine\u00a0with\u00a0is_currently_available\u00a0=\u00a0true\u00a0to see\u00a0current\u00a0distribution\u00a0only."
+        ]
+      },
+      {
+        "id": "01f113fde55b197ab0ae3ab95d548718",
+        "left": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.providers",
+          "alias": "providers"
+        },
+        "right": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.channel_availability",
+          "alias": "channel_availability"
+        },
+        "sql": [
+          "`providers`.`provider_id` = `channel_availability`.`provider_id`",
+          "--rt=FROM_RELATIONSHIP_TYPE_ONE_TO_MANY--"
+        ],
+        "instruction": [
+          "Use to enrich provider\u00a0details\u00a0(parent\u00a0company, HQ country) when\u00a0analyzing\u00a0channel distribution. The\u00a0provider_name\u00a0field already\u00a0exists\u00a0in channel_availability, so only\u00a0join\u00a0if you\u00a0need\u00a0parent_company\u00a0or\u00a0website."
+        ]
+      },
+      {
+        "id": "01f113fdf3db12c5b7c05877d24736eb",
+        "left": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.content_catalog",
+          "alias": "content_catalog"
+        },
+        "right": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.programming_schedule",
+          "alias": "programming_schedule"
+        },
+        "sql": [
+          "`content_catalog`.`content_id` = `programming_schedule`.`content_id`",
+          "--rt=FROM_RELATIONSHIP_TYPE_ONE_TO_MANY--"
+        ],
+        "instruction": [
+          "Use to\u00a0get\u00a0title metadata\u00a0(genre, rating, runtime, IMDb rating) for\u00a0scheduled airings. Essential\u00a0for analyzing\u00a0what\u00a0type\u00a0of content\u00a0airs in\u00a0primetime vs off-peak."
+        ]
+      },
+      {
+        "id": "01f113fe373e1c7682e2efc832b545f8",
+        "left": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.vod_title_availability",
+          "alias": "vod_title_availability"
+        },
+        "right": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.vod_episode_availability",
+          "alias": "vod_episode_availability"
+        },
+        "sql": [
+          "`vod_title_availability`.`title_id` = `vod_episode_availability`.`title_id`",
+          "--rt=FROM_RELATIONSHIP_TYPE_ONE_TO_MANY--"
+        ],
+        "instruction": [
+          "Use to drill\u00a0from\u00a0title-level availability\u00a0down\u00a0to episode-level. Only\u00a0series\u00a0titles\u00a0(title_id\u00a0LIKE 'S%') have\u00a0matching\u00a0episode\u00a0records. Filter\u00a0vod_title_availability.content_type = 'series'\u00a0before\u00a0joining."
+        ]
+      },
+      {
+        "id": "01f11402a9eb1dec93aa0d3c14f707e4",
+        "left": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.vod_title_availability",
+          "alias": "vod_title_availability"
+        },
+        "right": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.vod_title_mom_changes",
+          "alias": "vod_title_mom_changes"
+        },
+        "sql": [
+          "`vod_title_availability`.`title_id` = `vod_title_mom_changes`.`title_id`",
+          "--rt=FROM_RELATIONSHIP_TYPE_ONE_TO_MANY--"
+        ],
+        "instruction": [
+          "Use\u00a0to see\u00a0which currently-available titles had recent\u00a0changes. Join\u00a0with\u00a0report_month\u00a0filter\u00a0to focus\u00a0on a\u00a0specific month. A\u00a0single\u00a0title can have multiple changes\u00a0across\u00a0different months/platforms."
+        ]
+      },
+      {
+        "id": "01f11402fa2a1fb88fb32b64a92f088f",
+        "left": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.vod_title_availability",
+          "alias": "vod_title_availability"
+        },
+        "right": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.window_series",
+          "alias": "window_series"
+        },
+        "sql": [
+          "`vod_title_availability`.`title_id` = `window_series`.`title_id`",
+          "--rt=FROM_RELATIONSHIP_TYPE_ONE_TO_MANY--"
+        ],
+        "instruction": [
+          "Use to compare\u00a0a\u00a0series' current\u00a0VOD availability against its windowing lifecycle. Filter\u00a0title_id LIKE 'S%'\u00a0since\u00a0only\u00a0series titles\u00a0exist\u00a0in\u00a0window_series. Useful\u00a0for understanding\u00a0if a title's\u00a0current\u00a0platform\u00a0matches\u00a0its expected\u00a0window\u00a0stage."
+        ]
+      },
+      {
+        "id": "01f1140310801093bae4cb68b0dccb05",
+        "left": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.vod_title_availability",
+          "alias": "vod_title_availability"
+        },
+        "right": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.window_non_series",
+          "alias": "window_non_series"
+        },
+        "sql": [
+          "`vod_title_availability`.`title_id` = `window_non_series`.`title_id`",
+          "--rt=FROM_RELATIONSHIP_TYPE_ONE_TO_MANY--"
+        ],
+        "instruction": [
+          "Use\u00a0to compare\u00a0a movie's VOD availability against its theatrical-to-library\u00a0lifecycle. Filter\u00a0title_id LIKE\u00a0'M%'\u00a0since only\u00a0movies/specials exist\u00a0in window_non_series. Useful for tracking\u00a0if a movie has reached\u00a0AVOD/FAST stage."
+        ]
+      },
+      {
+        "id": "01f11403576e119b95451b39c100d520",
+        "left": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.window_series",
+          "alias": "window_series"
+        },
+        "right": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.vod_episode_availability",
+          "alias": "vod_episode_availability"
+        },
+        "sql": [
+          "`window_series`.`title_id` = `vod_episode_availability`.`title_id` AND `window_series`.`season_number` = `vod_episode_availability`.`season_number`",
+          "--rt=FROM_RELATIONSHIP_TYPE_MANY_TO_MANY--"
+        ],
+        "instruction": [
+          "Use\u00a0cautiously -- both\u00a0tables\u00a0have many\u00a0rows\u00a0per\u00a0title/season. Always\u00a0pre-aggregate\u00a0one\u00a0side\u00a0first. Useful for checking if episode\u00a0availability aligns with the current window stage for\u00a0a given\u00a0season."
+        ]
+      },
+      {
+        "id": "01f114036cb31f5581daa5d3870748e2",
+        "left": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.content_catalog",
+          "alias": "content_catalog"
+        },
+        "right": {
+          "identifier": "jay_mehta_catalog.versant_stream_metrics.vod_title_availability",
+          "alias": "vod_title_availability"
+        },
+        "sql": [
+          "`content_catalog`.`title` = `vod_title_availability`.`title`",
+          "--rt=FROM_RELATIONSHIP_TYPE_ONE_TO_MANY--"
+        ],
+        "instruction": [
+          "Use to\u00a0bridge\u00a0FAST content\u00a0with VOD availability. This\u00a0is a\u00a0text-based\u00a0join on\u00a0title name\u00a0(not\u00a0an\u00a0ID\u00a0join), so be aware\u00a0of possible mismatches. Use\u00a0for\u00a0exploratory analysis to\u00a0see\u00a0if\u00a0FAST-scheduled\u00a0content also\u00a0appears in VOD catalogs."
+        ]
+      }
+    ]
+  },
+  "benchmarks": {
+    "questions": [
+      {
+        "id": "fd196ac9187743a7a1964bc37f32834e",
+        "question": [
+          "How many total VOD titles are available across all platforms?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT COUNT(DISTINCT title_id) AS total_titles FROM jay_mehta_catalog.versant_stream_metrics.vod_title_availability WHERE is_currently_available = true"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "eee2048dcac34620bb8677c07506d944",
+        "question": [
+          "Show month-over-month title adds and removes"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT report_month, SUM(CASE WHEN change_type = 'Added' THEN 1 ELSE 0 END) AS added, SUM(CASE WHEN change_type = 'Removed' THEN 1 ELSE 0 END) AS removed, SUM(CASE WHEN change_type = 'Added' THEN 1 ELSE 0 END) - SUM(CASE WHEN change_type = 'Removed' THEN 1 ELSE 0 END) AS net_adds FROM jay_mehta_catalog.versant_stream_metrics.vod_title_mom_changes GROUP BY report_month ORDER BY report_month"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "e9b63d8a2446409b8808a789e3528387",
+        "question": [
+          "Which series have the most episodes available on Netflix?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT title, COUNT(*) AS episode_count, COUNT(DISTINCT season_number) AS season_count FROM jay_mehta_catalog.versant_stream_metrics.vod_episode_availability WHERE platform = 'Netflix' AND territory = 'US' AND is_currently_available = true GROUP BY title ORDER BY episode_count DESC LIMIT 20"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "e8b78c767d6a49ba8eefecd2d0d51abc",
+        "question": [
+          "How many titles are currently active in each windowing stage?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT window_lifecycle_stage, COUNT(DISTINCT title_id) AS active_titles FROM jay_mehta_catalog.versant_stream_metrics.window_series WHERE window_end_date IS NULL OR window_end_date >= CURRENT_DATE() GROUP BY window_lifecycle_stage ORDER BY CASE window_lifecycle_stage WHEN 'SVOD Exclusive' THEN 1 WHEN 'SVOD Shared' THEN 2 WHEN 'AVOD' THEN 3 WHEN 'FAST' THEN 4 WHEN 'Library' THEN 5 ELSE 6 END"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "deaf13fcea174bb8af0faf1f570840a7",
+        "question": [
+          "What percentage of programming is primetime by genre?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT c.genre, COUNT(*) AS total_airings, SUM(CASE WHEN ps.is_primetime = true THEN 1 ELSE 0 END) AS primetime_airings, ROUND(SUM(CASE WHEN ps.is_primetime = true THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS primetime_pct FROM jay_mehta_catalog.versant_stream_metrics.programming_schedule ps JOIN jay_mehta_catalog.versant_stream_metrics.channels c ON ps.channel_id = c.channel_id GROUP BY c.genre ORDER BY primetime_pct DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "dd77928af0cb418fac15c7692396be95",
+        "question": [
+          "How many titles changed availability last month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT change_type, COUNT(DISTINCT title_id) AS title_count FROM jay_mehta_catalog.versant_stream_metrics.vod_title_mom_changes WHERE report_month = (SELECT MAX(report_month) FROM jay_mehta_catalog.versant_stream_metrics.vod_title_mom_changes) GROUP BY change_type ORDER BY title_count DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "db2c2e396c024b3d9664b5d1cf14c2a6",
+        "question": [
+          "Which territories have the most FAST channel coverage?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT territory, COUNT(DISTINCT channel_id) AS channel_count, COUNT(DISTINCT provider_id) AS provider_count FROM jay_mehta_catalog.versant_stream_metrics.channel_availability WHERE is_currently_available = true GROUP BY territory ORDER BY channel_count DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d25106a78b4e47c5b196c9b726ee829c",
+        "question": [
+          "Which titles were recently added or removed?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT title, change_type, platform, territory, change_date FROM jay_mehta_catalog.versant_stream_metrics.vod_title_mom_changes WHERE report_month = (SELECT MAX(report_month) FROM jay_mehta_catalog.versant_stream_metrics.vod_title_mom_changes) ORDER BY change_date DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d2243496127c4673afd26ec23f386795",
+        "question": [
+          "What is the average time from Theatrical to SVOD for movies?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT window_lifecycle_stage, ROUND(AVG(window_duration_days), 0) AS avg_days, COUNT(DISTINCT title_id) AS title_count FROM jay_mehta_catalog.versant_stream_metrics.window_non_series WHERE window_lifecycle_stage IN ('Theatrical', 'PVOD', 'SVOD Exclusive') GROUP BY window_lifecycle_stage ORDER BY CASE window_lifecycle_stage WHEN 'Theatrical' THEN 1 WHEN 'PVOD' THEN 2 WHEN 'SVOD Exclusive' THEN 3 END"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cfd98f57310a45b5b4faaab8f1f0ee18",
+        "question": [
+          "Show me a breakdown of active channels per genre"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT genre, COUNT(*) AS channel_count FROM jay_mehta_catalog.versant_stream_metrics.channels WHERE status = 'active' GROUP BY genre ORDER BY channel_count DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cc5c65570f5245cc94deacdb482b090c",
+        "question": [
+          "Which titles air most frequently on FAST channels?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT cc.title, cc.content_type, cc.genre, COUNT(*) AS airing_count, COUNT(DISTINCT ps.channel_id) AS channel_count FROM jay_mehta_catalog.versant_stream_metrics.programming_schedule ps JOIN jay_mehta_catalog.versant_stream_metrics.content_catalog cc ON ps.content_id = cc.content_id GROUP BY cc.title, cc.content_type, cc.genre ORDER BY airing_count DESC LIMIT 25"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "c781ef005be54d04bb75cab6cf18dafd",
+        "question": [
+          "What are the monthly content churn trends?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT report_month, change_type, COUNT(DISTINCT title_id) AS title_count FROM jay_mehta_catalog.versant_stream_metrics.vod_title_mom_changes GROUP BY report_month, change_type ORDER BY report_month, change_type"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b914c1c65ba84adabcd840cc3ceefa3b",
+        "question": [
+          "How long do series typically stay in each windowing stage?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT window_lifecycle_stage, COUNT(DISTINCT title_id) AS title_count, ROUND(AVG(window_duration_days), 0) AS avg_days, MIN(window_duration_days) AS min_days, MAX(window_duration_days) AS max_days FROM jay_mehta_catalog.versant_stream_metrics.window_series GROUP BY window_lifecycle_stage ORDER BY CASE window_lifecycle_stage WHEN 'SVOD Exclusive' THEN 1 WHEN 'SVOD Shared' THEN 2 WHEN 'AVOD' THEN 3 WHEN 'FAST' THEN 4 WHEN 'Library' THEN 5 ELSE 6 END"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b21b3279991f4c93b26402fedc18431c",
+        "question": [
+          "Compare FAST platform lineup sizes"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT p.provider_name, COUNT(DISTINCT ca.channel_id) AS channel_count FROM jay_mehta_catalog.versant_stream_metrics.providers p JOIN jay_mehta_catalog.versant_stream_metrics.channel_availability ca ON p.provider_id = ca.provider_id WHERE ca.is_currently_available = true GROUP BY p.provider_name ORDER BY channel_count DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b02733e6722843ceb729f6510e77a01c",
+        "question": [
+          "What is the average window duration by lifecycle stage for series?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT window_lifecycle_stage, COUNT(DISTINCT title_id) AS title_count, ROUND(AVG(window_duration_days), 0) AS avg_days, MIN(window_duration_days) AS min_days, MAX(window_duration_days) AS max_days FROM jay_mehta_catalog.versant_stream_metrics.window_series GROUP BY window_lifecycle_stage ORDER BY CASE window_lifecycle_stage WHEN 'SVOD Exclusive' THEN 1 WHEN 'SVOD Shared' THEN 2 WHEN 'AVOD' THEN 3 WHEN 'FAST' THEN 4 WHEN 'Library' THEN 5 ELSE 6 END"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "a42bceebaa394b4d8c8b2072224fb15d",
+        "question": [
+          "How many channels does each provider have?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT p.provider_name, COUNT(DISTINCT ca.channel_id) AS channel_count FROM jay_mehta_catalog.versant_stream_metrics.providers p JOIN jay_mehta_catalog.versant_stream_metrics.channel_availability ca ON p.provider_id = ca.provider_id WHERE ca.is_currently_available = true GROUP BY p.provider_name ORDER BY channel_count DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "818565825dc343a1bf05ec53e6f31491",
+        "question": [
+          "What genres have the most FAST channels?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT genre, COUNT(*) AS channel_count FROM jay_mehta_catalog.versant_stream_metrics.channels WHERE status = 'active' GROUP BY genre ORDER BY channel_count DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "8054fb10bfed42c993c47d7e96ea1086",
+        "question": [
+          "Which platforms have the most exclusive content in the US?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT platform, COUNT(DISTINCT title_id) AS total_titles, SUM(CASE WHEN is_exclusive = true THEN 1 ELSE 0 END) AS exclusive_titles, ROUND(SUM(CASE WHEN is_exclusive = true THEN 1 ELSE 0 END) * 100.0 / COUNT(DISTINCT title_id), 2) AS exclusive_pct FROM jay_mehta_catalog.versant_stream_metrics.vod_title_availability WHERE territory = 'US' AND is_currently_available = true GROUP BY platform ORDER BY exclusive_titles DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "6edd1c209aa04aa9bbb98e48d61f1162",
+        "question": [
+          "What genres have the most content across SVOD platforms?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT genre, COUNT(DISTINCT title_id) AS title_count, COUNT(DISTINCT platform) AS platform_count FROM jay_mehta_catalog.versant_stream_metrics.vod_title_availability WHERE availability_type = 'SVOD' AND is_currently_available = true GROUP BY genre ORDER BY title_count DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "54933008f19c4fdaa577b891088c157d",
+        "question": [
+          "How many titles does each platform have in the United States?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT platform, COUNT(DISTINCT title_id) AS total_titles FROM jay_mehta_catalog.versant_stream_metrics.vod_title_availability WHERE territory = 'US' AND is_currently_available = true GROUP BY platform ORDER BY total_titles DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "5032caebe9f14779b291e6755f9bfeb7",
+        "question": [
+          "How many channels are available in each territory?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT territory, COUNT(DISTINCT channel_id) AS channel_count FROM jay_mehta_catalog.versant_stream_metrics.channel_availability WHERE is_currently_available = true GROUP BY territory ORDER BY channel_count DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "4fc5041a07cd48da8636b7df7ca1bb61",
+        "question": [
+          "How many episodes are available per platform in the US?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT platform, COUNT(DISTINCT title_id) AS title_count, COUNT(*) AS total_episodes, SUM(CASE WHEN is_currently_available = true THEN 1 ELSE 0 END) AS available_episodes FROM jay_mehta_catalog.versant_stream_metrics.vod_episode_availability WHERE territory = 'US' GROUP BY platform ORDER BY total_episodes DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "4e21eec2678b45928379fd132e87a090",
+        "question": [
+          "Which platforms have the most VOD titles in the US?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT platform, COUNT(DISTINCT title_id) AS total_titles FROM jay_mehta_catalog.versant_stream_metrics.vod_title_availability WHERE territory = 'US' AND is_currently_available = true GROUP BY platform ORDER BY total_titles DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "47ce5a8c85704183aefb61f4c2daef9e",
+        "question": [
+          "Compare streaming platform library sizes in the US"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT platform, COUNT(DISTINCT title_id) AS total_titles FROM jay_mehta_catalog.versant_stream_metrics.vod_title_availability WHERE territory = 'US' AND is_currently_available = true GROUP BY platform ORDER BY total_titles DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "3ba988785c7340dca68cb2e78f380621",
+        "question": [
+          "Break down VOD content by type - series vs movies vs specials"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT content_type, COUNT(DISTINCT title_id) AS title_count, COUNT(DISTINCT platform) AS platform_count, COUNT(DISTINCT territory) AS territory_count FROM jay_mehta_catalog.versant_stream_metrics.vod_title_availability WHERE is_currently_available = true GROUP BY content_type ORDER BY title_count DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "3897eccde3b54861af0015af67a23009",
+        "question": [
+          "What is the repeat rate by time block?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT time_block, COUNT(*) AS total_airings, SUM(CASE WHEN is_repeat = true THEN 1 ELSE 0 END) AS repeats, ROUND(SUM(CASE WHEN is_repeat = true THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS repeat_pct FROM jay_mehta_catalog.versant_stream_metrics.programming_schedule GROUP BY time_block ORDER BY CASE time_block WHEN 'Early Morning' THEN 1 WHEN 'Morning' THEN 2 WHEN 'Afternoon' THEN 3 WHEN 'Prime Access' THEN 4 WHEN 'Primetime' THEN 5 WHEN 'Late Night' THEN 6 WHEN 'Overnight' THEN 7 END"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "31c607a9548e4301b609a6ccca97b29f",
+        "question": [
+          "How does VOD availability in the US compare to the UK?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT territory, COUNT(DISTINCT title_id) AS total_titles, COUNT(DISTINCT platform) AS platform_count, SUM(CASE WHEN is_exclusive = true THEN 1 ELSE 0 END) AS exclusive_titles FROM jay_mehta_catalog.versant_stream_metrics.vod_title_availability WHERE territory IN ('US', 'UK') AND is_currently_available = true GROUP BY territory ORDER BY total_titles DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2e00990e5b7b40e38d39128ff573b55d",
+        "question": [
+          "How quickly do movies move through release windows?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT window_lifecycle_stage, COUNT(DISTINCT title_id) AS title_count, ROUND(AVG(window_duration_days), 0) AS avg_days FROM jay_mehta_catalog.versant_stream_metrics.window_non_series GROUP BY window_lifecycle_stage ORDER BY CASE window_lifecycle_stage WHEN 'Theatrical' THEN 1 WHEN 'PVOD' THEN 2 WHEN 'SVOD Exclusive' THEN 3 WHEN 'SVOD Shared' THEN 4 WHEN 'AVOD' THEN 5 WHEN 'FAST' THEN 6 WHEN 'Library' THEN 7 ELSE 8 END"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "286ab21dcf0c4f4ca171623918056d65",
+        "question": [
+          "Show me the series windowing lifecycle summary"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT window_lifecycle_stage, COUNT(DISTINCT title_id) AS title_count, ROUND(AVG(window_duration_days), 0) AS avg_days, MIN(window_duration_days) AS min_days, MAX(window_duration_days) AS max_days FROM jay_mehta_catalog.versant_stream_metrics.window_series GROUP BY window_lifecycle_stage ORDER BY CASE window_lifecycle_stage WHEN 'SVOD Exclusive' THEN 1 WHEN 'SVOD Shared' THEN 2 WHEN 'AVOD' THEN 3 WHEN 'FAST' THEN 4 WHEN 'Library' THEN 5 ELSE 6 END"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2626d13c0c2b4c56a125a583405c1885",
+        "question": [
+          "Which series are currently in the FAST window?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT title_id, title, genre, window_start_date, window_duration_days FROM jay_mehta_catalog.versant_stream_metrics.window_series WHERE window_lifecycle_stage = 'FAST' AND (window_end_date IS NULL OR window_end_date >= CURRENT_DATE()) ORDER BY window_start_date DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "1dfe76726be248df877a09a4717b459a",
+        "question": [
+          "Show the primetime vs non-primetime split for each channel genre"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT c.genre, COUNT(*) AS total_airings, SUM(CASE WHEN ps.is_primetime = true THEN 1 ELSE 0 END) AS primetime_airings, ROUND(SUM(CASE WHEN ps.is_primetime = true THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS primetime_pct FROM jay_mehta_catalog.versant_stream_metrics.programming_schedule ps JOIN jay_mehta_catalog.versant_stream_metrics.channels c ON ps.channel_id = c.channel_id GROUP BY c.genre ORDER BY primetime_pct DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "1b5d58c7cd4f41219fae7772ff7bc1cd",
+        "question": [
+          "Show me the exclusivity rate by platform for the US market"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT platform, COUNT(DISTINCT title_id) AS total_titles, SUM(CASE WHEN is_exclusive = true THEN 1 ELSE 0 END) AS exclusive_titles, ROUND(SUM(CASE WHEN is_exclusive = true THEN 1 ELSE 0 END) * 100.0 / COUNT(DISTINCT title_id), 2) AS exclusive_pct FROM jay_mehta_catalog.versant_stream_metrics.vod_title_availability WHERE territory = 'US' AND is_currently_available = true GROUP BY platform ORDER BY exclusive_titles DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "0fe0ca3e0f4740fb8f155b39926bc0bd",
+        "question": [
+          "Show platform availability across territories"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT platform, territory, COUNT(DISTINCT title_id) AS title_count FROM jay_mehta_catalog.versant_stream_metrics.vod_title_availability WHERE is_currently_available = true GROUP BY platform, territory ORDER BY platform, title_count DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "0b1fa5638a83447fb6394164111fb14c",
+        "question": [
+          "What is the net adds trend by month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT report_month, SUM(CASE WHEN change_type = 'Added' THEN 1 ELSE 0 END) AS added, SUM(CASE WHEN change_type = 'Removed' THEN 1 ELSE 0 END) AS removed, SUM(CASE WHEN change_type = 'Added' THEN 1 ELSE 0 END) - SUM(CASE WHEN change_type = 'Removed' THEN 1 ELSE 0 END) AS net_adds FROM jay_mehta_catalog.versant_stream_metrics.vod_title_mom_changes GROUP BY report_month ORDER BY report_month"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "05a9b63eb150417eae4c79c83c1e6d2c",
+        "question": [
+          "How many active FAST channels are there by genre?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT genre, COUNT(*) AS channel_count FROM jay_mehta_catalog.versant_stream_metrics.channels WHERE status = 'active' GROUP BY genre ORDER BY channel_count DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "03ed1af28fee465b9b645b4c6a51b093",
+        "question": [
+          "Which providers carry the most channels?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT p.provider_name, COUNT(DISTINCT ca.channel_id) AS channel_count FROM jay_mehta_catalog.versant_stream_metrics.providers p JOIN jay_mehta_catalog.versant_stream_metrics.channel_availability ca ON p.provider_id = ca.provider_id WHERE ca.is_currently_available = true GROUP BY p.provider_name ORDER BY channel_count DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "032c6fac49b74460b3baf957a35db4e0",
+        "question": [
+          "Which titles are available on both FAST channels and VOD platforms?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT cc.title, cc.content_type, cc.genre, COUNT(DISTINCT ps.channel_id) AS fast_channels, COUNT(DISTINCT vta.platform) AS vod_platforms FROM jay_mehta_catalog.versant_stream_metrics.content_catalog cc JOIN jay_mehta_catalog.versant_stream_metrics.programming_schedule ps ON cc.content_id = ps.content_id JOIN jay_mehta_catalog.versant_stream_metrics.vod_title_availability vta ON cc.title = vta.title WHERE vta.territory = 'US' AND vta.is_currently_available = true GROUP BY cc.title, cc.content_type, cc.genre ORDER BY fast_channels + vod_platforms DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "00e157b6d3564624b3628ae4bddf3452",
+        "question": [
+          "What percentage of FAST programming is repeats?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT ROUND(SUM(CASE WHEN is_repeat = true THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS repeat_pct FROM jay_mehta_catalog.versant_stream_metrics.programming_schedule"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

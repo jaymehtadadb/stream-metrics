@@ -1,0 +1,21 @@
+command:
+  - "python"
+  - "-m"
+  - "uvicorn"
+  - "app:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+
+env:
+  - name: GENIE_SPACE_ID
+    value: "01f1142ce4e51e52908a9772dfa7cd23"
+  - name: WAREHOUSE_ID
+    value: "862f1d757f0424f7"
+
+resources:
+  - name: sql-warehouse
+    sql_warehouse:
+      id: "862f1d757f0424f7"
+      permission: CAN_USE
