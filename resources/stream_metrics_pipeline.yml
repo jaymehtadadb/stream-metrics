@@ -1,0 +1,120 @@
+resources:
+  jobs:
+    stream_metrics_ingestion:
+      name: "[${bundle.target}] Stream Metrics - Data Ingestion Pipeline"
+      description: |
+        End-to-end pipeline that extracts data from the Stream Metrics API,
+        creates Delta tables in Unity Catalog, and applies metadata comments.
+        
+        Tasks:
+        1. Setup - Creates catalog, schema, and volume
+        2. Extract - Pulls data from Stream Metrics API to CSV in volumes
+        3. Ingest - Creates Delta tables from CSV files
+        4. Comments - Adds column-level documentation for Genie
+        5. Validate - Runs data quality checks
+
+      tags:
+        project: stream-metrics
+        team: versant-workshop
+
+      tasks:
+        - task_key: setup_infrastructure
+          description: "Create Unity Catalog schema and volume"
+          notebook_task:
+            notebook_path: ../src/notebooks/01_setup_infrastructure.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+            source: WORKSPACE
+          new_cluster:
+            spark_version: "15.4.x-scala2.12"
+            num_workers: 0
+            node_type_id: "i3.xlarge"
+            spark_conf:
+              spark.master: "local[*, 4]"
+              spark.databricks.cluster.profile: "singleNode"
+            custom_tags:
+              ResourceClass: SingleNode
+
+        - task_key: extract_api_data
+          depends_on:
+            - task_key: setup_infrastructure
+          description: "Extract data from Stream Metrics API to volume CSVs"
+          notebook_task:
+            notebook_path: ../src/notebooks/02_extract_api_to_volumes.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              api_key: ${var.api_key}
+              max_rows: "50000"
+            source: WORKSPACE
+          new_cluster:
+            spark_version: "15.4.x-scala2.12"
+            num_workers: 0
+            node_type_id: "i3.xlarge"
+            spark_conf:
+              spark.master: "local[*, 4]"
+              spark.databricks.cluster.profile: "singleNode"
+            custom_tags:
+              ResourceClass: SingleNode
+          timeout_seconds: 7200
+
+        - task_key: create_tables_and_ingest
+          depends_on:
+            - task_key: extract_api_data
+          description: "Create Delta tables from CSV files using read_files()"
+          notebook_task:
+            notebook_path: ../src/notebooks/03_create_tables_and_ingest.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+            source: WORKSPACE
+          new_cluster:
+            spark_version: "15.4.x-scala2.12"
+            num_workers: 0
+            node_type_id: "i3.xlarge"
+            spark_conf:
+              spark.master: "local[*, 4]"
+              spark.databricks.cluster.profile: "singleNode"
+            custom_tags:
+              ResourceClass: SingleNode
+
+        - task_key: add_table_comments
+          depends_on:
+            - task_key: create_tables_and_ingest
+          description: "Apply column-level comments for Genie"
+          notebook_task:
+            notebook_path: ../src/notebooks/04_add_table_comments.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+            source: WORKSPACE
+          new_cluster:
+            spark_version: "15.4.x-scala2.12"
+            num_workers: 0
+            node_type_id: "i3.xlarge"
+            spark_conf:
+              spark.master: "local[*, 4]"
+              spark.databricks.cluster.profile: "singleNode"
+            custom_tags:
+              ResourceClass: SingleNode
+
+        - task_key: data_quality_checks
+          depends_on:
+            - task_key: add_table_comments
+          description: "Validate data quality and cross-table consistency"
+          notebook_task:
+            notebook_path: ../src/notebooks/05_data_quality_checks.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+            source: WORKSPACE
+          new_cluster:
+            spark_version: "15.4.x-scala2.12"
+            num_workers: 0
+            node_type_id: "i3.xlarge"
+            spark_conf:
+              spark.master: "local[*, 4]"
+              spark.databricks.cluster.profile: "singleNode"
+            custom_tags:
+              ResourceClass: SingleNode

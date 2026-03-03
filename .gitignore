@@ -8,3 +8,6 @@ __pycache__/
 screenshots/
 .env
 *.log
+exports/
+logs/
+.databricks/

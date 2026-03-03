@@ -1,0 +1,26 @@
+resources:
+  apps:
+    versant_stream_metrics:
+      name: "versant-stream-metrics"
+      description: "Stream Metrics Intelligence App - Versant content analytics with Genie Explorer, Key Metrics, Content Explorer, Competitive Analysis, and Dashboard."
+      source_code_path: ../app
+      config:
+        command:
+          - "python"
+          - "-m"
+          - "uvicorn"
+          - "app:app"
+          - "--host"
+          - "0.0.0.0"
+          - "--port"
+          - "8000"
+        env:
+          - name: GENIE_SPACE_ID
+            value: ${var.genie_space_id}
+          - name: WAREHOUSE_ID
+            value: ${var.warehouse_id}
+      resources:
+        - name: sql-warehouse
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE

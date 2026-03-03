@@ -1,0 +1,37 @@
+bundle:
+  name: stream-metrics-solution-accelerator
+
+variables:
+  catalog:
+    description: "Unity Catalog name for Stream Metrics data"
+    default: jay_mehta_catalog
+  schema:
+    description: "Schema name for Stream Metrics tables"
+    default: stream_metrics
+  warehouse_id:
+    description: "SQL Warehouse ID for query execution"
+    default: 862f1d757f0424f7
+  genie_space_id:
+    description: "Genie Space ID for the Stream Metrics explorer"
+    default: 01f1142ce4e51e52908a9772dfa7cd23
+  api_key:
+    description: "Stream Metrics API key (set via --var or environment)"
+    default: ""
+
+workspace:
+  root_path: /Workspace/Users/${workspace.current_user.userName}/stream-metrics-accelerator
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://e2-demo-field-eng.cloud.databricks.com
+
+  prod:
+    mode: production
+    workspace:
+      host: https://e2-demo-field-eng.cloud.databricks.com
