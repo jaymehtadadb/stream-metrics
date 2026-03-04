@@ -118,3 +118,24 @@ resources:
               spark.databricks.cluster.profile: "singleNode"
             custom_tags:
               ResourceClass: SingleNode
+
+        - task_key: create_genie_space
+          depends_on:
+            - task_key: data_quality_checks
+          description: "Create and configure Genie Space with instructions, joins, benchmarks"
+          notebook_task:
+            notebook_path: ../src/notebooks/06_create_genie_space.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              warehouse_id: ${var.warehouse_id}
+            source: WORKSPACE
+          new_cluster:
+            spark_version: "15.4.x-scala2.12"
+            num_workers: 0
+            node_type_id: "i3.xlarge"
+            spark_conf:
+              spark.master: "local[*, 4]"
+              spark.databricks.cluster.profile: "singleNode"
+            custom_tags:
+              ResourceClass: SingleNode

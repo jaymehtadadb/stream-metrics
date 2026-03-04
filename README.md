@@ -8,7 +8,7 @@ Built for the **Versant Genie Best Practices Workshop**.
 
 | Component | Description |
 |-----------|-------------|
-| **Data Pipeline** | 5 Databricks notebooks orchestrated as a multi-task job |
+| **Data Pipeline** | 6 Databricks notebooks orchestrated as a multi-task job |
 | **12 Delta Tables** | VOD availability, content windowing, and title change tracking |
 | **Databricks App** | FastAPI app with Key Metrics, Content Explorer, Competitive Analysis, Dashboard, and Genie AI |
 | **Genie Space** | Pre-configured with best practices, joins, SQL expressions, and benchmarks |
@@ -20,13 +20,14 @@ Built for the **Versant Genie Best Practices Workshop**.
 │                    Databricks Asset Bundle                │
 │                                                          │
 │  ┌────────────────────────────────────────────────────┐  │
-│  │  Data Pipeline (Databricks Job - 5 tasks)          │  │
+│  │  Data Pipeline (Databricks Job - 6 tasks)          │  │
 │  │                                                    │  │
 │  │  01_setup_infrastructure                           │  │
 │  │    └─▶ 02_extract_api_to_volumes                   │  │
 │  │          └─▶ 03_create_tables_and_ingest            │  │
 │  │                └─▶ 04_add_table_comments             │  │
 │  │                      └─▶ 05_data_quality_checks      │  │
+│  │                            └─▶ 06_create_genie_space  │  │
 │  └────────────────────────────────────────────────────┘  │
 │                                                          │
 │  ┌────────────────────────────────────────────────────┐  │
@@ -64,7 +65,8 @@ stream-metrics/
 │       ├── 02_extract_api_to_volumes.py   # Pull API data → CSV in volumes
 │       ├── 03_create_tables_and_ingest.py # CSV → Delta tables via read_files()
 │       ├── 04_add_table_comments.py       # Column-level docs for Genie
-│       └── 05_data_quality_checks.py      # Validate data quality
+│       ├── 05_data_quality_checks.py      # Validate data quality
+│       └── 06_create_genie_space.py       # Create & configure Genie Space
 ├── app/
 │   ├── app.py                             # FastAPI app (backend + frontend)
 │   ├── app.yaml                           # App runtime config
@@ -122,7 +124,7 @@ databricks apps deploy versant-stream-metrics \
 
 ## Data Pipeline
 
-The pipeline runs as a Databricks Job with 5 sequential tasks:
+The pipeline runs as a Databricks Job with 6 sequential tasks:
 
 ### Task 1: Setup Infrastructure
 Creates the Unity Catalog schema and managed volume for raw CSV storage.
@@ -153,6 +155,16 @@ Applies column-level descriptions from the Stream Metrics data dictionary. These
 
 ### Task 5: Data Quality Checks
 Validates row counts, null rates on key columns, service name distributions, and cross-table consistency.
+
+### Task 6: Create Genie Space
+Creates a new Databricks Genie Space via the SDK and configures it with:
+- All 12 tables as data sources
+- Comprehensive text instructions (domain terms, abbreviations, query patterns, formatting rules)
+- 7 cross-table join specifications with relationship types and usage guidance
+- SQL expression snippets (measures, filters, dimensions)
+- 10 curated sample questions
+- 14 benchmark question-SQL pairs for Genie training
+- The created Space ID is passed as a task value for downstream use
 
 ## Key Metrics Computed
 
